@@ -5,17 +5,17 @@ import numpy as np
 import time
 
 
-# Create pipeline
+# pipeline erstellen
 pipeline = dai.Pipeline()
 
-# Create mono camera nodes for left and right cameras
+# nodes fuer graustufen kameras
 monoLeft = pipeline.create(dai.node.MonoCamera)
 monoRight = pipeline.create(dai.node.MonoCamera)
 
-# Create the stereo depth node
+# node fuer depth
 stereo = pipeline.create(dai.node.StereoDepth)
 
-# Create an output node for the depth stream
+# output fuer tiefe
 xoutDepth = pipeline.create(dai.node.XLinkOut)
 xoutDepth.setStreamName("depth")
 
@@ -52,15 +52,7 @@ with dai.Device(pipeline) as device:
         # Convert depth to centimeters:
         depth_cm = depthFrame / 10.0
 
-        # For demonstration, check the center pixel
-    #     h, w = depth_cm.shape
-    #     center_depth = depth_cm[h // 2, w // 2]
-    #     left_depth = depth_cm[h//2, w//3]
-    #     current_time = time.time()
-    #     if current_time - last_print_time > 1.0:  # 1 second interval
-    #         print(f"Center depth: {center_depth:.2f} cm")
-    #    #     print(f"Left depth: {left_depth:.2f} cm")
-    #         last_print_time = current_time
+  
         h, w = depth_cm.shape
         cy, cx = h // 2, w // 2
         region_size = 80
@@ -87,7 +79,7 @@ with dai.Device(pipeline) as device:
         # Normalize depth for display purposes
         depth_norm = cv2.normalize(depthFrame, None, 0, 255, cv2.NORM_MINMAX)
         depth_norm = np.uint8(depth_norm)
-        depth_color = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
+        depth_color = cv2.applyColorMap(depth_norm, cv2.COLORMAP_TURBO)
 
         cv2.rectangle(depth_color, (cx - region_size, cy - region_size), (cx + region_size, cy + region_size), (0, 0, 255), 2)
         cv2.rectangle(depth_color, (lx - region_size, cy - region_size), (lx + region_size, cy + region_size), (0, 0, 255), 2)
@@ -95,6 +87,7 @@ with dai.Device(pipeline) as device:
 
         cv2.putText(depth_color, f"Valid: {center_valid.size}", (cx - 90, cy - region_size - 10),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
+        
         # If the center pixel is closer than 20cm, overlay a message
         if center_min< 50:
             cv2.putText(depth_color, "Detected!", (50, 50),
